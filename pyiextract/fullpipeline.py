@@ -5,6 +5,7 @@ from .oiextractor import OIExtractor
 from .coreferencereducer import CoreferenceReducer
 from .opennreextractor import OpenNREExtractor
 from .llmextractor import LLMExtractor
+from .nerreducer import NERReducer
 
 
 class FullPipeline(Pipeline):
@@ -12,8 +13,5 @@ class FullPipeline(Pipeline):
         super().__init__(
             [CoreferenceResolver()],
             [SVOExtractor(), OIExtractor(), OpenNREExtractor(), LLMExtractor()],
-            [CoreferenceReducer()]
+            [CoreferenceReducer(), NERReducer()]
         )
-
-    def name(self) -> str:
-        return "full"

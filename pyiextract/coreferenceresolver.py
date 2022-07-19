@@ -3,7 +3,7 @@ import typing
 from allennlp.predictors.predictor import Predictor
 
 from .resolver import Resolver
-from .spacy import NLP
+from .context import Context
 
 
 """
@@ -56,12 +56,9 @@ def improved_replace_corefs(document, clusters):
 
 class CoreferenceResolver(Resolver):
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__("coreference")
         self._predictor = Predictor.from_path("https://storage.googleapis.com/allennlp-public-models/coref-spanbert-large-2021.03.10.tar.gz")
 
-    def resolve(self, text: str) -> str:
+    def resolve(self, text: str, context: Context) -> str:
         prediction = self._predictor.predict(document=text)
-        return improved_replace_corefs(NLP(text), prediction["clusters"])
-
-    def name(self) -> str:
-        return "coreference"
+        return improved_replace_corefs(context.original_doc(), prediction["clusters"])

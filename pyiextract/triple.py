@@ -43,16 +43,20 @@ class Triple:
     def add_extractor(self, extractor: str) -> None:
         self._extractors.add(extractor)
 
+    def _base_str(self) -> str:
+        return f"{self._head_entity} -> {self._connection} -> {self._tail_entity}"
+
     def __str__(self) -> str:
         output = ""
         if self._negated:
             output += "[NEGATED] "
-        output += f"{self._head_entity} -> {self._connection} -> {self._tail_entity}"
+        output += self._base_str()
         if self._temporal is not None:
             output += f" in {self._temporal}"
         if self._location is not None:
             output += f" at {self._location}"
+        output += " {" + ",".join(self._extractors) + "}"
         return output
 
     def __hash__(self) -> int:
-        return hash(str(self))
+        return hash(self._base_str())

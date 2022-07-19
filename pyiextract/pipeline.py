@@ -1,8 +1,8 @@
 import typing
 
+from .context import Context
 from .resolver import Resolver
 from .extractor import Extractor
-from .triple import Triple
 from .reducer import Reducer
 from .document import Document
 
@@ -15,17 +15,16 @@ class Pipeline:
 
     def extract(self, text: str) -> Document:
         document = Document()
+        context = Context(text)
         for resolver in self._resolvers:
-            text = resolver.resolve(text)
+            text = resolver.resolve(text, context)
+        context.set_resolved_text(text)
         for extractor in self._extractors:
-            for triple in extractor.extract(text):
+            for triple in extractor.extract(context):
                 document.add_triple(triple)
         for reducer in self._reducers:
             triples = set(document.triples(sort=False))
-            reduced_triples = reducer.reduce(triples)
+            reduced_triples = reducer.reduce(triples, context)
             for triple in triples.difference(reduced_triples):
                 document.remove_triple(triple)
         return document
-
-    def name(self) -> str:
-        return "base"

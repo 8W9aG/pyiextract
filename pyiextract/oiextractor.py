@@ -4,18 +4,17 @@ from allennlp.predictors.predictor import Predictor
 
 from .extractor import Extractor
 from .triple import Triple
-from .spacy import NLP
+from .context import Context
 
 
 class OIExtractor(Extractor):
     def __init__(self):
-        super().__init__()
+        super().__init__("openie")
         self._predictor = Predictor.from_path("https://storage.googleapis.com/allennlp-public-models/openie-model.2020.03.26.tar.gz")
 
-    def extract(self, text: str) -> typing.List[Triple]:
+    def extract(self, context: Context) -> typing.List[Triple]:
         triples: typing.List[Triple] = []
-        doc = NLP(text)
-        for sent in doc.sents:
+        for sent in context.resolved_doc().sents:
             prediction = self._predictor.predict(sentence=str(sent))
             words = prediction["words"]
             for verb in prediction["verbs"]:
@@ -40,16 +39,12 @@ class OIExtractor(Extractor):
                     elif tag.endswith("ARGM-LOC"):
                         location_words.append(word)
                 if head_entity_words and tail_entity_words and connection_words:
-                    triples.append(Triple(
+                    triples.append(self.create_triple(
                         " ".join(head_entity_words),
                         " ".join(connection_words),
                         " ".join(tail_entity_words),
-                        "openie",
                         temporal = None if not temporal_words else " ".join(temporal_words),
                         negated = False if not negated_words else True,
                         location = None if not location_words else " ".join(location_words)
                     ))
         return triples
-
-    def name(self) -> str:
-        return "openie"

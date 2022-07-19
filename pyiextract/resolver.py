@@ -1,10 +1,12 @@
+import typing
 
-class Resolver:
-    def __init__(self) -> None:
-        pass
+from .node import Node
+from .context import Context
 
-    def resolve(self, text: str) -> str:
+
+class Resolver(Node):
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+
+    def resolve(self, text: str, context: Context) -> str:
         raise NotImplementedError("Can't use resolve on base Resolver class")
-
-    def name(self) -> str:
-        return "base"

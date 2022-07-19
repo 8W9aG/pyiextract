@@ -8,6 +8,7 @@ from copy import copy
 
 from .extractor import Extractor
 from .triple import Triple
+from .context import Context
 from .spacy import NLP
 
 
@@ -1976,20 +1977,20 @@ def parse_sentence(sentence, tokenizer, encoder, nlp):
 
 class LLMExtractor(Extractor):
     def __init__(self):
-        super().__init__()
+        super().__init__("llm")
         language_model = "bert-base-cased"
         self._tokenizer = AutoTokenizer.from_pretrained(language_model)
         self._encoder = BertModel.from_pretrained(language_model)
         self._encoder.eval()
 
-    def extract(self, text: str) -> typing.List[Triple]:
+    def extract(self, context: Context) -> typing.List[Triple]:
         triples: typing.List[Triple] = []
-        for sent in NLP(text).sents:
+        for sent in context.resolved_doc().sents:
             for triplets in parse_sentence(sent.text, self._tokenizer, self._encoder, NLP):
                 if triplets["c"] < 0.003:
                     continue
                 head_entity = triplets["h"]
                 tail_entity = triplets["t"]
-                triple = Triple(head_entity, " ".join(triplets["r"]), tail_entity, "llm")
+                triple = self.create_triple(head_entity, " ".join(triplets["r"]), tail_entity)
                 triples.append(triple)
         return triples
