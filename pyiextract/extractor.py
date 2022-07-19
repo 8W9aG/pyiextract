@@ -21,3 +21,6 @@ class Extractor(Node):
         negated: bool = False,
         location: typing.Optional[str] = None) -> Triple:
         return Triple(head_entity, connection, tail_entity, self.name(), temporal=temporal, negated=negated, location=location)
+
+    def name(self) -> str:
+        return super().name() + "-extractor"

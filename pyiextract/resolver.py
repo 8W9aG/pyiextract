@@ -10,3 +10,6 @@ class Resolver(Node):
 
     def resolve(self, text: str, context: Context) -> str:
         raise NotImplementedError("Can't use resolve on base Resolver class")
+
+    def name(self) -> str:
+        return super().name() + "-resolver"

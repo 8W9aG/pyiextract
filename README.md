@@ -9,6 +9,7 @@ A python library for extracting knowledge from freeform text.
 * AllenNLP
 * OpenNRE
 * Transformers
+* TextBlob
 
 Snippets from:
 
@@ -17,9 +18,8 @@ Snippets from:
 
 ## TODO
 
-1. Add subjectivity reducer (using TextBlob).
-2. Add BLINK entity linking.
-3. Add quotation extraction.
-4. Add automatic translation to English (without using services).
-5. Filter junk triples (use ML with G2V).
-6. Deduplicate triples (use ML with G2V).
+1. Add BLINK entity linking.
+2. Add quotation extraction.
+3. Add automatic translation to English (without using services).
+4. Filter junk triples (use ML with G2V).
+5. Deduplicate triples (use ML with G2V).

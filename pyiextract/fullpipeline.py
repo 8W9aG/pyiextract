@@ -6,6 +6,7 @@ from .coreferencereducer import CoreferenceReducer
 from .opennreextractor import OpenNREExtractor
 from .llmextractor import LLMExtractor
 from .nerreducer import NERReducer
+from .subjectivityreducer import SubjectivityReducer
 
 
 class FullPipeline(Pipeline):
@@ -13,5 +14,5 @@ class FullPipeline(Pipeline):
         super().__init__(
             [CoreferenceResolver()],
             [SVOExtractor(), OIExtractor(), OpenNREExtractor(), LLMExtractor()],
-            [CoreferenceReducer(), NERReducer()]
+            [CoreferenceReducer(), NERReducer(), SubjectivityReducer()]
         )
