@@ -1,15 +1,17 @@
 import typing
 from collections import defaultdict
+from copy import copy
+import os
 
 from transformers import BertModel, AutoTokenizer
 import torch
 import numpy as np
-from copy import copy
 
 from .extractor import Extractor
 from .triple import Triple
 from .context import Context
 from .spacy import NLP
+from .strfind import extract_entities_span
 
 
 """
@@ -1979,18 +1981,21 @@ class LLMExtractor(Extractor):
     def __init__(self):
         super().__init__("llm")
         language_model = "bert-base-cased"
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
         self._tokenizer = AutoTokenizer.from_pretrained(language_model)
         self._encoder = BertModel.from_pretrained(language_model)
         self._encoder.eval()
 
     def extract(self, context: Context) -> typing.List[Triple]:
         triples: typing.List[Triple] = []
-        for sent in context.resolved_doc().sents:
+        doc = context.resolved_doc()
+        for sent in doc.sents:
             for triplets in parse_sentence(sent.text, self._tokenizer, self._encoder, NLP):
                 if triplets["c"] < 0.003:
                     continue
-                head_entity = triplets["h"]
-                tail_entity = triplets["t"]
-                triple = self.create_triple(head_entity, " ".join(triplets["r"]), tail_entity)
+                head_entity_text = triplets["h"]
+                tail_entity_text = triplets["t"]
+                relation = " ".join(triplets["r"])
+                triple = self.create_triple(head_entity_text, relation, tail_entity_text, doc)
                 triples.append(triple)
         return triples

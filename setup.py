@@ -36,7 +36,10 @@ setup(
     author='Will Sackfield',
     author_email='will.sackfield@gmail.com',
     license='MIT',
-    install_requires=install_requires() + ["opennre @ git+https://github.com/thunlp/OpenNRE@b8668d34db21672e7f2f952eab74843a96cd9b00#egg=opennre"],
+    install_requires=install_requires() + [
+        "opennre @ git+https://github.com/thunlp/OpenNRE@b8668d34db21672e7f2f952eab74843a96cd9b00#egg=opennre",
+        "BLINK @ git+https://github.com/8W9aG/BLINK@5026de24c7e7e465955a04c17a799de5fb34866d#egg=BLINK"
+    ],
     zip_safe=False,
     packages=find_packages()
 )

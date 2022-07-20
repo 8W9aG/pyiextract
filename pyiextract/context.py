@@ -20,6 +20,7 @@ class Context:
 
     def set_resolved_text(self, resolved_text: str) -> None:
         self._resolved_text = resolved_text
+        self._resolved_doc = None
 
     def resolved_text(self) -> str:
         return self._resolved_text

@@ -29,7 +29,8 @@ class OpenNREExtractor(Extractor):
         # Extract triples from the entities in a given sentence
         triples: typing.List[Triple] = []
         for count, sentence_entity_collection in enumerate(sentence_entities):
-            sentence = str(sentences[count])
+            spacy_sentence = sentences[count]
+            sentence = str(spacy_sentence)
             for entity_count, sentence_entity in enumerate(sentence_entity_collection):
                 for other_sentence_entity in sentence_entity_collection[entity_count + 1:]:
                     prediction = self._model.infer({
@@ -38,5 +39,10 @@ class OpenNREExtractor(Extractor):
                         "t": {"pos": (other_sentence_entity.start_char, other_sentence_entity.end_char)}
                     })
                     if prediction[1] > 0.5:
-                        triples.append(self.create_triple(str(sentence_entity), prediction[0], str(other_sentence_entity)))
+                        triples.append(self.create_triple(
+                            str(sentence_entity),
+                            prediction[0],
+                            str(other_sentence_entity),
+                            doc,
+                        ))
         return triples

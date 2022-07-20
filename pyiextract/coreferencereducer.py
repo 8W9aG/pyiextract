@@ -2,14 +2,13 @@ import typing
 
 from .reducer import Reducer
 from .triple import Triple
-from .node import Node
 from .context import Context
+from .pronouns import PRONOUNS
 
 
 class CoreferenceReducer(Reducer):
     def __init__(self) -> None:
         super().__init__("coreference")
-        self._bad_entities = {"he", "him", "she", "her", "they", "them"}
 
     def reduce(self, triples: typing.Set[Triple], context: Context) -> typing.Set[Triple]:
-        return {x for x in triples if x.head_entity().lower() not in self._bad_entities and x.tail_entity().lower() not in self._bad_entities}
+        return {x for x in triples if x.head_entity().name().lower() not in PRONOUNS and x.tail_entity().name().lower() not in PRONOUNS}

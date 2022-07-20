@@ -5,6 +5,7 @@ from allennlp.predictors.predictor import Predictor
 from .extractor import Extractor
 from .triple import Triple
 from .context import Context
+from .strfind import extract_entities_span
 
 
 class OIExtractor(Extractor):
@@ -14,7 +15,8 @@ class OIExtractor(Extractor):
 
     def extract(self, context: Context) -> typing.List[Triple]:
         triples: typing.List[Triple] = []
-        for sent in context.resolved_doc().sents:
+        doc = context.resolved_doc()
+        for sent in doc.sents:
             prediction = self._predictor.predict(sentence=str(sent))
             words = prediction["words"]
             for verb in prediction["verbs"]:
@@ -39,10 +41,14 @@ class OIExtractor(Extractor):
                     elif tag.endswith("ARGM-LOC"):
                         location_words.append(word)
                 if head_entity_words and tail_entity_words and connection_words:
+                    head_entity_text = " ".join(head_entity_words)
+                    tail_entity_text = " ".join(tail_entity_words)
+                    relation_text = " ".join(connection_words)
                     triples.append(self.create_triple(
-                        " ".join(head_entity_words),
-                        " ".join(connection_words),
-                        " ".join(tail_entity_words),
+                        head_entity_text,
+                        relation_text,
+                        tail_entity_text,
+                        doc,
                         temporal = None if not temporal_words else " ".join(temporal_words),
                         negated = False if not negated_words else True,
                         location = None if not location_words else " ".join(location_words)

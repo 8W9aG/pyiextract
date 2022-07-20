@@ -1,5 +1,7 @@
 import typing
 
+from .entity import Entity
+
 
 class Triple:
     def __init__(
@@ -7,25 +9,37 @@ class Triple:
         head_entity: str,
         connection: str,
         tail_entity: str,
+        doc: typing.Any,
         extractor: str,
         temporal: typing.Optional[str] = None,
         negated: bool = False,
-        location: typing.Optional[str] = None) -> None:
-        self._head_entity = head_entity
+        location: typing.Optional[str] = None,
+        is_quote: bool = False) -> None:
+        entities = {str(x) : x for x in doc.ents}
+        head_entity_id = head_entity
+        if head_entity in entities:
+            if entities[head_entity]._.blink_id is not None:
+                head_entity_id = entities[head_entity]._.blink_id
+        tail_entity_id = tail_entity
+        if tail_entity in entities:
+            if entities[tail_entity]._.blink_id is not None:
+                tail_entity_id = entities[tail_entity]._.blink_id
+        self._head_entity = Entity(str(head_entity), head_entity_id)
         self._connection = connection
-        self._tail_entity = tail_entity
+        self._tail_entity = Entity(str(tail_entity), tail_entity_id)
         self._temporal = temporal
         self._negated = negated
         self._location = location
+        self._is_quote = is_quote
         self._extractors = {extractor}
 
-    def head_entity(self) -> str:
+    def head_entity(self) -> Entity:
         return self._head_entity
 
     def connection(self) -> str:
         return self._connection
 
-    def tail_entity(self) -> str:
+    def tail_entity(self) -> Entity:
         return self._tail_entity
 
     def temporal(self) -> typing.Optional[str]:
@@ -44,12 +58,14 @@ class Triple:
         self._extractors.add(extractor)
 
     def _base_str(self) -> str:
-        return f"{self._head_entity} -> {self._connection} -> {self._tail_entity}"
+        return f"{str(self._head_entity)} -> {self._connection} -> {str(self._tail_entity)}"
 
     def __str__(self) -> str:
         output = ""
         if self._negated:
             output += "[NEGATED] "
+        if self._is_quote:
+            output += "[QUOTE] "
         output += self._base_str()
         if self._temporal is not None:
             output += f" in {self._temporal}"

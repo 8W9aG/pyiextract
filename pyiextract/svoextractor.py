@@ -12,8 +12,18 @@ class SVOExtractor(Extractor):
         super().__init__("svo")
 
     def extract(self, context: Context) -> typing.List[Triple]:
-        return [self.create_triple(
+        doc = context.resolved_doc()
+        triples = [self.create_triple(
             " ".join([str(x) for x in subject]),
             " ".join([str(x) for x in verb]),
             " ".join([str(x) for x in object]),
-        ) for subject, verb, object in extract.subject_verb_object_triples(context.resolved_doc())]
+            doc,
+        ) for subject, verb, object in extract.subject_verb_object_triples(doc)]
+        triples.extend([self.create_triple(
+            " ".join([str(x) for x in speaker]),
+            " ".join([str(x) for x in cue]),
+            " ".join([str(x) for x in content]),
+            doc,
+            is_quote=True
+        ) for speaker, cue, content in extract.direct_quotations(doc)])
+        return triples
