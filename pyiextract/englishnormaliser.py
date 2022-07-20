@@ -1,7 +1,7 @@
 from langdetect import detect
 
-from .normaliser import Normaliser
 from .context import Context
+from .normaliser import Normaliser
 
 
 class EnglishNormaliser(Normaliser):

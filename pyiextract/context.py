@@ -6,8 +6,8 @@ from .spacy import NLP
 class Context:
     def __init__(self, original_text: str) -> None:
         self._original_text = original_text
-        self._original_doc = None
-        self._resolved_doc = None
+        self._original_doc: typing.Any = None
+        self._resolved_doc: typing.Any = None
         self._resolved_text = original_text
 
     def original_text(self) -> str:

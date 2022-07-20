@@ -1,8 +1,8 @@
 import typing
 
-from .triple import Triple
-from .node import Node
 from .context import Context
+from .node import Node
+from .triple import Triple
 
 
 class Extractor(Node):
@@ -20,7 +20,9 @@ class Extractor(Node):
         doc: typing.Any,
         temporal: typing.Optional[str] = None,
         negated: bool = False,
-        location: typing.Optional[str] = None) -> Triple:
+        location: typing.Optional[str] = None,
+        is_quote: bool = False,
+    ) -> Triple:
         return Triple(
             head_entity,
             connection,
@@ -29,7 +31,8 @@ class Extractor(Node):
             self.name(),
             temporal=temporal,
             negated=negated,
-            location=location
+            location=location,
+            is_quote=is_quote,
         )
 
     def name(self) -> str:

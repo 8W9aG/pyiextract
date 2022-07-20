@@ -1,13 +1,13 @@
-import os
-import urllib
 import argparse
 import logging
+import os
 import typing
+import urllib
 
 import blink.main_dense as main_dense
 
-from .normaliser import Normaliser
 from .context import Context
+from .normaliser import Normaliser
 
 
 class BlinkNormaliser(Normaliser):
@@ -57,7 +57,18 @@ class BlinkNormaliser(Normaliser):
         }
         self._args = argparse.Namespace(**config)
         self._models = main_dense.load_models(self._args, logger=None)
-        self._valid_ent_types = {"PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART", "LAW"}
+        self._valid_ent_types = {
+            "PERSON",
+            "NORP",
+            "FAC",
+            "ORG",
+            "GPE",
+            "LOC",
+            "PRODUCT",
+            "EVENT",
+            "WORK_OF_ART",
+            "LAW",
+        }
 
     def normalise(self, text: str, context: Context) -> str:
         doc = context.resolved_doc()
@@ -68,20 +79,24 @@ class BlinkNormaliser(Normaliser):
             if ent.label_ not in self._valid_ent_types:
                 continue
             ent_str = str(ent)[:127]
-            context_left = doc.text[:ent.start_char].lower()[-127:]
-            context_right = doc.text[ent.end_char:].lower()[:127]
-            test_data.append({
-                "id": 0,
-                "label": "unknown",
-                "label_id": -1,
-                "context_left": context_left,
-                "mention": ent_str,
-                "context_right": context_right,
-                "ent": ent
-            })
+            context_left = doc.text[: ent.start_char].lower()[-127:]
+            context_right = doc.text[ent.end_char :].lower()[:127]
+            test_data.append(
+                {
+                    "id": 0,
+                    "label": "unknown",
+                    "label_id": -1,
+                    "context_left": context_left,
+                    "mention": ent_str,
+                    "context_right": context_right,
+                    "ent": ent,
+                }
+            )
         if not test_data:
             return text
-        _, _, _, _, _, predictions, scores, identifiers = main_dense.run(self._args, None, *self._models, test_data=test_data)
+        _, _, _, _, _, predictions, scores, identifiers = main_dense.run(
+            self._args, None, *self._models, test_data=test_data
+        )
         for count, test_data_ent in enumerate(test_data):
             test_data_predictions = predictions[count]
             test_data_scores = scores[count]
@@ -89,6 +104,8 @@ class BlinkNormaliser(Normaliser):
             if test_data_predictions and test_data_scores and test_data_identifiers:
                 if test_data_scores[0] > 325.0:
                     ent_str = str(test_data_ent["ent"])
-                    logging.info(f"Found entity ID {test_data_identifiers[0]} {test_data_predictions[0]} for {ent_str}")
+                    logging.info(
+                        f"Found entity ID {test_data_identifiers[0]} {test_data_predictions[0]} for {ent_str}"
+                    )
                     test_data_ent["ent"]._.blink_id = test_data_identifiers[0]
         return text

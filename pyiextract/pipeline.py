@@ -1,11 +1,11 @@
-import typing
 import logging
+import typing
 
 from .context import Context
-from .normaliser import Normaliser
-from .extractor import Extractor
-from .reducer import Reducer
 from .document import Document
+from .extractor import Extractor
+from .normaliser import Normaliser
+from .reducer import Reducer
 
 
 class Pipeline:
@@ -13,7 +13,8 @@ class Pipeline:
         self,
         normalisers: typing.List[Normaliser],
         extractors: typing.List[Extractor],
-        reducers: typing.List[Reducer]) -> None:
+        reducers: typing.List[Reducer],
+    ) -> None:
         self._normalisers = normalisers
         self._extractors = extractors
         self._reducers = reducers

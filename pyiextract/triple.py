@@ -14,8 +14,9 @@ class Triple:
         temporal: typing.Optional[str] = None,
         negated: bool = False,
         location: typing.Optional[str] = None,
-        is_quote: bool = False) -> None:
-        entities = {str(x) : x for x in doc.ents}
+        is_quote: bool = False,
+    ) -> None:
+        entities = {str(x): x for x in doc.ents}
         head_entity_id = head_entity
         if head_entity in entities:
             if entities[head_entity]._.blink_id is not None:
@@ -56,6 +57,9 @@ class Triple:
 
     def add_extractor(self, extractor: str) -> None:
         self._extractors.add(extractor)
+
+    def add_extractors(self, extractors: typing.Set[str]) -> None:
+        self._extractors |= extractors
 
     def _base_str(self) -> str:
         return f"{str(self._head_entity)} -> {self._connection} -> {str(self._tail_entity)}"

@@ -1,18 +1,16 @@
+import os
 import typing
 from collections import defaultdict
 from copy import copy
-import os
 
-from transformers import BertModel, AutoTokenizer
-import torch
 import numpy as np
+import torch
+from transformers import AutoTokenizer, BertModel, PreTrainedTokenizer
 
-from .extractor import Extractor
-from .triple import Triple
 from .context import Context
+from .extractor import Extractor
 from .spacy import NLP
-from .strfind import extract_entities_span
-
+from .triple import Triple
 
 """
 Adapted From:
@@ -20,31 +18,177 @@ https://github.com/theblackcat102/language-models-are-knowledge-graphs-pytorch/b
 """
 
 found_invalid = [
-    'and', 'of', 'in', 'to', ',', 'for', 'be', 'by', 'with', 'on', 'as', 'that', 'from', 'be', ')', '(', 'which',
-    'at', 'be', 'be', 'be', ';', 'or', 'but', 'have', 'have', 'the', 'have', 'not', 'after', '"', 'include', 'also',
-    'be', 'into', 'between', 'such', ':', 'do', 'while', 'when', 'during', 'would', 'over', 'since', '2019', 
-    'well', 'than', '2020', 'under', 'where', 'one', 'be', 'hold', '2018', 'can', 'through', '-', 
-    'make',  'out', 'there', 'know', 'due', 'a', 'take', 'up', 'begin', 'before', 'about',
-    "'",  '4', '10', '3', '11', '&', '$', '12',  '2015', '2008','–', 'will',
-    'so', 'do', 'follow', 'most', 'although', 'cause', 'only', '—',  '2007',  '2014', 'mostly', '5', 'say', '2017', '20', 
-    '2009',
+    "and",
+    "of",
+    "in",
+    "to",
+    ",",
+    "for",
+    "be",
+    "by",
+    "with",
+    "on",
+    "as",
+    "that",
+    "from",
+    "be",
+    ")",
+    "(",
+    "which",
+    "at",
+    "be",
+    "be",
+    "be",
+    ";",
+    "or",
+    "but",
+    "have",
+    "have",
+    "the",
+    "have",
+    "not",
+    "after",
+    '"',
+    "include",
+    "also",
+    "be",
+    "into",
+    "between",
+    "such",
+    ":",
+    "do",
+    "while",
+    "when",
+    "during",
+    "would",
+    "over",
+    "since",
+    "2019",
+    "well",
+    "than",
+    "2020",
+    "under",
+    "where",
+    "one",
+    "be",
+    "hold",
+    "2018",
+    "can",
+    "through",
+    "-",
+    "make",
+    "out",
+    "there",
+    "know",
+    "due",
+    "a",
+    "take",
+    "up",
+    "begin",
+    "before",
+    "about",
+    "'",
+    "4",
+    "10",
+    "3",
+    "11",
+    "&",
+    "$",
+    "12",
+    "2015",
+    "2008",
+    "–",
+    "will",
+    "so",
+    "do",
+    "follow",
+    "most",
+    "although",
+    "cause",
+    "only",
+    "—",
+    "2007",
+    "2014",
+    "mostly",
+    "5",
+    "say",
+    "2017",
+    "20",
+    "2009",
 ]
 
 invalid_relations = [
-    'and', 'but', 'or', 'so', 'because', 'when', 'before', 'although', # conjunction
-    'oh', 'wow', 'ouch', 'ah', 'oops',
-    'what', 'how', 'where', 'when', 'who', 'whom',
-    'a', 'and', 'the', 'there', 
-    'them', 'he', 'she', 'him', 'her', 'it', # pronoun
-    'ten', 'hundred', 'thousand', 'million', 'billion',# unit
-    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',# number
-    'year', 'month', 'day', 'daily',
+    "and",
+    "but",
+    "or",
+    "so",
+    "because",
+    "when",
+    "before",
+    "although",  # conjunction
+    "oh",
+    "wow",
+    "ouch",
+    "ah",
+    "oops",
+    "what",
+    "how",
+    "where",
+    "when",
+    "who",
+    "whom",
+    "a",
+    "and",
+    "the",
+    "there",
+    "them",
+    "he",
+    "she",
+    "him",
+    "her",
+    "it",  # pronoun
+    "ten",
+    "hundred",
+    "thousand",
+    "million",
+    "billion",  # unit
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",  # number
+    "year",
+    "month",
+    "day",
+    "daily",
 ] + found_invalid
 
 auxiliaries = [
-    'be', 'can', 'have', 'dare', 'may', 'will', 'would', 'should', 
-    'need', 'ought', 'shall', 'might', 'do', 'does', 'did',
-    'be able to', 'had better','have to','need to','ought to','used to',
+    "be",
+    "can",
+    "have",
+    "dare",
+    "may",
+    "will",
+    "would",
+    "should",
+    "need",
+    "ought",
+    "shall",
+    "might",
+    "do",
+    "does",
+    "did",
+    "be able to",
+    "had better",
+    "have to",
+    "need to",
+    "ought to",
+    "used to",
 ]
 
 adjectives = [
@@ -1730,7 +1874,7 @@ adverbs = [
     "zany",
     "zealous",
     "zesty",
-    "zigzag"
+    "zigzag",
 ]
 
 invalid_relations += adjectives
@@ -1738,7 +1882,8 @@ invalid_relations += adverbs
 
 invalid_relations_set = set(invalid_relations)
 
-def process_matrix(attentions, layer_idx = -1, head_num = 0, avg_head=False):
+
+def process_matrix(attentions, layer_idx=-1, head_num=0, avg_head=False):
     if avg_head:
         attn = torch.mean(attentions[0][layer_idx], 0)
         attention_matrix = attn.detach().numpy()
@@ -1749,11 +1894,20 @@ def process_matrix(attentions, layer_idx = -1, head_num = 0, avg_head=False):
     return attention_matrix
 
 
-def create_mapping(sentence, return_pt=False, nlp = None, tokenizer=None):
-    '''Create a mapping
-        nlp: spacy model
-        tokenizer: huggingface tokenizer
-    '''
+def create_mapping(
+    sentence: str,
+    return_pt: bool = False,
+    nlp: typing.Any = None,
+    tokenizer: typing.Optional[PreTrainedTokenizer] = None,
+):
+    """Create a mapping
+    nlp: spacy model
+    tokenizer: huggingface tokenizer
+    """
+    if nlp is None:
+        return
+    if tokenizer is None:
+        return
     doc = nlp(sentence)
 
     start_chunk = []
@@ -1765,8 +1919,8 @@ def create_mapping(sentence, return_pt=False, nlp = None, tokenizer=None):
         end_chunk.append(chunk.end)
 
     sentence_mapping = []
-    token2id = {}
-    mode = 0 # 1 in chunk, 0 not in chunk
+    token2id: typing.Dict[str, int] = {}
+    mode = 0  # 1 in chunk, 0 not in chunk
     chunk_id = 0
     for idx, token in enumerate(doc):
         if idx in start_chunk:
@@ -1781,45 +1935,47 @@ def create_mapping(sentence, return_pt=False, nlp = None, tokenizer=None):
             sentence_mapping.append(token.text)
             token2id[sentence_mapping[-1]] = len(token2id)
 
-
     token_ids = []
     tokenid2word_mapping = []
 
     for token in sentence_mapping:
-        subtoken_ids = tokenizer(str(token), add_special_tokens=False)['input_ids']
-        tokenid2word_mapping += [ token2id[token] ]*len(subtoken_ids)
+        subtoken_ids = tokenizer(str(token), add_special_tokens=False)["input_ids"]
+        tokenid2word_mapping += [token2id[token]] * len(subtoken_ids)
         token_ids += subtoken_ids
 
     tokenizer_name = str(tokenizer.__str__)
-    if 'GPT2' in tokenizer_name:
+    outputs: typing.Dict[str, typing.Any] = {}
+    if "GPT2" in tokenizer_name:
         outputs = {
-            'input_ids': token_ids,
-            'attention_mask': [1]*(len(token_ids)),
+            "input_ids": token_ids,
+            "attention_mask": [1] * (len(token_ids)),
         }
 
     else:
         outputs = {
-            'input_ids': [tokenizer.cls_token_id] + token_ids + [tokenizer.sep_token_id],
-            'attention_mask': [1]*(len(token_ids)+2),
-            'token_type_ids': [0]*(len(token_ids)+2)
+            "input_ids": [tokenizer.cls_token_id]
+            + token_ids
+            + [tokenizer.sep_token_id],
+            "attention_mask": [1] * (len(token_ids) + 2),
+            "token_type_ids": [0] * (len(token_ids) + 2),
         }
 
     if return_pt:
         for key, value in outputs.items():
             outputs[key] = torch.from_numpy(np.array(value)).long().unsqueeze(0)
-    
+
     return outputs, tokenid2word_mapping, token2id, noun_chunks
 
 
 def compress_attention(attention, tokenid2word_mapping, operator=np.mean):
 
     new_index = []
-    
+
     prev = -1
     for idx, row in enumerate(attention):
         token_id = tokenid2word_mapping[idx]
         if token_id != prev:
-            new_index.append( [row])
+            new_index.append([row])
             prev = token_id
         else:
             new_index[-1].append(row)
@@ -1833,64 +1989,63 @@ def compress_attention(attention, tokenid2word_mapping, operator=np.mean):
     attention = np.array(new_matrix).T
 
     prev = -1
-    new_index=  []
+    new_index = []
     for idx, row in enumerate(attention):
         token_id = tokenid2word_mapping[idx]
         if token_id != prev:
-            new_index.append( [row])
+            new_index.append([row])
             prev = token_id
         else:
             new_index[-1].append(row)
 
-    
     new_matrix = []
     for row in new_index:
         new_matrix.append(operator(np.array(row), 0))
-    
+
     new_matrix = np.array(new_matrix)
 
     return new_matrix.T
 
 
 def build_graph(matrix):
-    graph = defaultdict(list) 
+    graph = defaultdict(list)
 
     for idx in range(0, len(matrix)):
-        for col in range(idx+1, len(matrix)):
-            graph[idx].append((col, matrix[idx][col] ))
+        for col in range(idx + 1, len(matrix)):
+            graph[idx].append((col, matrix[idx][col]))
     return graph
 
 
 def BFS(s, end, graph, max_size=-1, black_list_relation=[]):
-    visited = [False] * (max(graph.keys())+100) 
-  
-    # Create a queue for BFS 
-    queue = [] 
+    visited = [False] * (max(graph.keys()) + 100)
 
-    # Mark the source node as  
-    # visited and enqueue it 
+    # Create a queue for BFS
+    queue = []
+
+    # Mark the source node as
+    # visited and enqueue it
     queue.append((s, [(s, 0)]))
-    
+
     found_paths = []
 
     visited[s] = True
-    
-    while queue: 
+
+    while queue:
 
         s, path = queue.pop(0)
 
-        # Get all adjacent vertices of the 
-        # dequeued vertex s. If a adjacent 
-        # has not been visited, then mark it 
-        # visited and enqueue it 
+        # Get all adjacent vertices of the
+        # dequeued vertex s. If a adjacent
+        # has not been visited, then mark it
+        # visited and enqueue it
         for i, conf in graph[s]:
             if i == end:
-                found_paths.append(path+[(i, conf)])
+                found_paths.append(path + [(i, conf)])
                 break
             if visited[i] == False:
-                queue.append((i, copy(path)+[(i, conf)]))
+                queue.append((i, copy(path) + [(i, conf)]))
                 visited[i] = True
-    
+
     candidate_facts = []
     for path_pairs in found_paths:
         if len(path_pairs) < 3:
@@ -1931,21 +2086,32 @@ def filter_relation_sets(params):
     if head in id2token and tail in id2token:
         head = id2token[head]
         tail = id2token[tail]
-        relations = [ NLP(id2token[idx])[0].lemma_  for idx in triplet_idx[1:-1] if idx in id2token ]
-        if len(relations) > 0 and check_relations_validity(relations) and head.lower() not in invalid_relations_set and tail.lower() not in invalid_relations_set:
-            return {'h': head, 't': tail, 'r': relations, 'c': confidence }
+        relations = [
+            NLP(id2token[idx])[0].lemma_ for idx in triplet_idx[1:-1] if idx in id2token
+        ]
+        if (
+            len(relations) > 0
+            and check_relations_validity(relations)
+            and head.lower() not in invalid_relations_set
+            and tail.lower() not in invalid_relations_set
+        ):
+            return {"h": head, "t": tail, "r": relations, "c": confidence}
     return {}
 
 
-def parse_sentence(sentence, tokenizer, encoder, nlp):
-    inputs, tokenid2word_mapping, token2id, noun_chunks  = create_mapping(sentence, return_pt=True, nlp=nlp, tokenizer=tokenizer)
+def parse_sentence(
+    sentence: str, tokenizer: PreTrainedTokenizer, encoder: typing.Any, nlp: typing.Any
+):
+    inputs, tokenid2word_mapping, token2id, noun_chunks = create_mapping(
+        sentence, return_pt=True, nlp=nlp, tokenizer=tokenizer
+    )
 
     with torch.no_grad():
         outputs = encoder(**inputs, output_attentions=True)
 
-    '''
+    """
     Use average of last layer attention : page 6, section 3.1.2
-    '''
+    """
     attention = process_matrix(outputs[2], avg_head=True)
 
     merged_attention = compress_attention(attention, tokenid2word_mapping)
@@ -1957,17 +2123,26 @@ def parse_sentence(sentence, tokenizer, encoder, nlp):
             if head != tail:
                 tail_head_pairs.append((token2id[head], token2id[tail]))
 
-    black_list_relation = set([ token2id[n]  for n in noun_chunks ])
+    black_list_relation = set([token2id[n] for n in noun_chunks])
 
     all_relation_pairs = []
-    id2token = { value: key for key, value in token2id.items()}
+    id2token = {value: key for key, value in token2id.items()}
 
-    params = [(pair[0], pair[1], attn_graph, max(tokenid2word_mapping), black_list_relation,) for pair in tail_head_pairs]
+    params = [
+        (
+            pair[0],
+            pair[1],
+            attn_graph,
+            max(tokenid2word_mapping),
+            black_list_relation,
+        )
+        for pair in tail_head_pairs
+    ]
     for param in params:
         output = bfs(param)
         if len(output):
             all_relation_pairs += [(o, id2token) for o in output]
-    
+
     triplet_text = []
     for relation_pair in all_relation_pairs:
         triplet = filter_relation_sets(relation_pair)
@@ -1990,12 +2165,16 @@ class LLMExtractor(Extractor):
         triples: typing.List[Triple] = []
         doc = context.resolved_doc()
         for sent in doc.sents:
-            for triplets in parse_sentence(sent.text, self._tokenizer, self._encoder, NLP):
+            for triplets in parse_sentence(
+                sent.text, self._tokenizer, self._encoder, NLP
+            ):
                 if triplets["c"] < 0.003:
                     continue
                 head_entity_text = triplets["h"]
                 tail_entity_text = triplets["t"]
                 relation = " ".join(triplets["r"])
-                triple = self.create_triple(head_entity_text, relation, tail_entity_text, doc)
+                triple = self.create_triple(
+                    head_entity_text, relation, tail_entity_text, doc
+                )
                 triples.append(triple)
         return triples

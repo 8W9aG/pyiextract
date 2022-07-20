@@ -1,5 +1,5 @@
-from .node import Node
 from .context import Context
+from .node import Node
 
 
 class Normaliser(Node):
