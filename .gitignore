@@ -130,3 +130,6 @@ dmypy.json
 
 # Custom
 .DS_Store
+output.py
+test.json
+output.json

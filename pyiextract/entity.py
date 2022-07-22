@@ -19,3 +19,7 @@ class Entity:
         if self._identifier != self._name:
             output += f" ({self._identifier})"
         return output
+
+    def __iter__(self):
+        yield "name", self._name
+        yield "identifier", self._identifier

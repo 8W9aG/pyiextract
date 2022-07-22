@@ -23,3 +23,6 @@ class Document:
                 triples_list, key=lambda x: len(x.extractors()), reverse=True
             )
         return triples_list
+
+    def __iter__(self):
+        yield "triples", [dict(x) for x in self.triples()]

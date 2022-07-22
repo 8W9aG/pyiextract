@@ -25,9 +25,9 @@ class Triple:
         if tail_entity in entities:
             if entities[tail_entity]._.blink_id is not None:
                 tail_entity_id = entities[tail_entity]._.blink_id
-        self._head_entity = Entity(str(head_entity), head_entity_id)
+        self._head_entity = Entity(str(head_entity), str(head_entity_id))
         self._connection = connection
-        self._tail_entity = Entity(str(tail_entity), tail_entity_id)
+        self._tail_entity = Entity(str(tail_entity), str(tail_entity_id))
         self._temporal = temporal
         self._negated = negated
         self._location = location
@@ -80,3 +80,13 @@ class Triple:
 
     def __hash__(self) -> int:
         return hash(self._base_str())
+
+    def __iter__(self):
+        yield "head_entity", dict(self._head_entity)
+        yield "connection", self._connection
+        yield "tail_entity", dict(self._tail_entity)
+        yield "negated", self._negated
+        yield "is_quote", self._is_quote
+        yield "temporal", self._temporal
+        yield "location", self._location
+        yield "extractors", list(self._extractors)

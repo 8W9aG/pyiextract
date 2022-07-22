@@ -2017,7 +2017,10 @@ def build_graph(matrix):
 
 
 def BFS(s, end, graph, max_size=-1, black_list_relation=[]):
-    visited = [False] * (max(graph.keys()) + 100)
+    keys = list(graph.keys())
+    if not keys:
+        return []
+    visited = [False] * (max(keys) + 100)
 
     # Create a queue for BFS
     queue = []
@@ -2165,16 +2168,19 @@ class LLMExtractor(Extractor):
         triples: typing.List[Triple] = []
         doc = context.resolved_doc()
         for sent in doc.sents:
-            for triplets in parse_sentence(
-                sent.text, self._tokenizer, self._encoder, NLP
-            ):
-                if triplets["c"] < 0.003:
-                    continue
-                head_entity_text = triplets["h"]
-                tail_entity_text = triplets["t"]
-                relation = " ".join(triplets["r"])
-                triple = self.create_triple(
-                    head_entity_text, relation, tail_entity_text, doc
-                )
-                triples.append(triple)
+            sent_str = str(sent)
+            for i in range(0, len(sent_str), 256):
+                sub_sent = sent_str[i:i+512]
+                for triplets in parse_sentence(
+                    sub_sent, self._tokenizer, self._encoder, NLP
+                ):
+                    if triplets["c"] < 0.003:
+                        continue
+                    head_entity_text = triplets["h"]
+                    tail_entity_text = triplets["t"]
+                    relation = " ".join(triplets["r"])
+                    triple = self.create_triple(
+                        head_entity_text, relation, tail_entity_text, doc
+                    )
+                    triples.append(triple)
         return triples
