@@ -62,9 +62,21 @@ Snippets have also been adapted from the following repositories:
 
 ## Installation :inbox_tray:
 
+When installing on MacOS, make sure you have the following installed:
+
+* [Xcode](https://developer.apple.com/xcode/)
+* [Homebrew](https://brew.sh/)
+
+Make sure you install the following packages on brew:
+
+```shell
+$ brew install openblas rust cmake
+```
+
 To install from pypi:
 
 ```shell
+$ pip install --upgrade pip setuptools
 $ pip install pyiextract
 ```
 

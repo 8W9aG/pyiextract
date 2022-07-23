@@ -1,10 +1,10 @@
 textacy==0.12.0
 allennlp==2.10.0
 allennlp-models==2.10.0
-en-core-web-trf==3.3.0
-git+https://github.com/thunlp/OpenNRE@b8668d34db21672e7f2f952eab74843a96cd9b00
+-e git+https://github.com/thunlp/OpenNRE@b8668d34db21672e7f2f952eab74843a96cd9b00#egg=OpenNRE
 transformers==4.20.1
 textblob==0.17.1
 -e git+https://github.com/8W9aG/BLINK@5026de24c7e7e465955a04c17a799de5fb34866d#egg=BLINK
 python-Levenshtein==0.12.2
 langdetect==1.0.9
+https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.3.0/en_core_web_trf-3.3.0.tar.gz
