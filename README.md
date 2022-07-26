@@ -70,7 +70,7 @@ When installing on MacOS, make sure you have the following installed:
 Make sure you install the following packages on brew:
 
 ```shell
-$ brew install openblas rust cmake
+$ brew install openblas rust cmake wget
 ```
 
 To install from pypi:
